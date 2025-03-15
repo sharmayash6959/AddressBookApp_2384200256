@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using ModelLayer.Model;
 using RepositoryLayer.Entity;
 
 namespace RepositoryLayer.Context
@@ -7,8 +8,11 @@ namespace RepositoryLayer.Context
     {
         public AddressBookContext(DbContextOptions<AddressBookContext> options) : base(options)
         {
+
         }
 
-        public DbSet<AddressBook> AddressBooks { get; set; }
+        public DbSet<AddressBook> AddressBooks { get; set; } = null!;
     }
+
+
 }
