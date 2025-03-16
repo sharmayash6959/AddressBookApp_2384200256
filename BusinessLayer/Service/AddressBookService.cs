@@ -61,6 +61,9 @@ namespace BusinessLayer.Service
         {
             var contact = await _addressBookRepository.AddContact(request);
             await _cache.KeyDeleteAsync("contacts"); // Invalidate cache
+
+            _rabbitMQPublisher.PublishMessage("ContactAddedQueue",
+                $"New contact added: {contact.Name}, {contact.Email}");
             return contact;
         }
 

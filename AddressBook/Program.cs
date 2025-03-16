@@ -48,6 +48,11 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
+//RabbitMQ services
+builder.Services.AddSingleton<RabbitMQPublisher>();
+builder.Services.AddHostedService<RabbitMQConsumer>();
+
+
 // JWT Authentication
 var key = Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
