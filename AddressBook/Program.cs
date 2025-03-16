@@ -6,6 +6,7 @@ using BusinessLayer.Validators;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using ModelLayer.DTOs;
 using RepositoryLayer.Context;
 using RepositoryLayer.Interface;
@@ -41,6 +42,7 @@ builder.Services.AddScoped<IAddressBookRL, AddressBookRL>();
 // Services and Repositories
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // JWT Authentication
 var key = Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]);

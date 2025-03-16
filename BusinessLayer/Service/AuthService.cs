@@ -16,13 +16,52 @@ namespace BusinessLayer.Service
     {
         private readonly IUserRepository _userRepository;
         private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
 
-        public AuthService(IUserRepository userRepository, IConfiguration configuration)
+        public AuthService(IUserRepository userRepository, IConfiguration configuration, IEmailService emailService)
         {
             _userRepository = userRepository;
             _configuration = configuration;
+            _emailService = emailService;
         }
 
+        //
+        public async Task<bool> ForgotPasswordAsync(ForgotPasswordDTO request)
+        {
+            var user = await _userRepository.GetUserByEmailAsync(request.Email);
+            if (user == null) return false;
+
+            // Generate Reset Token (GUID)
+            user.ResetToken = Guid.NewGuid().ToString();
+            user.ResetTokenExpiry = DateTime.UtcNow.AddHours(1);
+
+            await _userRepository.UpdateUserAsync(user);
+
+            // Send Reset Email
+            string resetLink = $"https://yourapp.com/reset-password?token={user.ResetToken}";
+            string subject = "Password Reset Request";
+            string body = $"Click the link to reset your password: {resetLink}";
+
+            await _emailService.SendEmailAsync(user.Email, subject, body);
+
+            return true;
+        }
+
+        public async Task<bool> ResetPasswordAsync(ResetPasswordDTO request)
+        {
+            var user = await _userRepository.GetUserByResetTokenAsync(request.Token);
+            if (user == null || user.ResetTokenExpiry < DateTime.UtcNow) return false;
+
+            // Hash New Password
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            user.ResetToken = null;
+            user.ResetTokenExpiry = null;
+
+            await _userRepository.UpdateUserAsync(user);
+            return true;
+        }
+
+        //
         public async Task<bool> RegisterUser(UserDTO userDto)
         {
             var existingUser = await _userRepository.GetUserByEmail(userDto.Email);

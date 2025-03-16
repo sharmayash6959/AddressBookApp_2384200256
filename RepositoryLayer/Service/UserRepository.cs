@@ -25,5 +25,16 @@ namespace RepositoryLayer.Service
             await _context.Users.AddAsync(user);
             return await _context.SaveChangesAsync() > 0;
         }
+
+        public async Task<User> GetUserByResetTokenAsync(string token)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.ResetToken == token);
+        }
+
+        public async Task UpdateUserAsync(User user)
+        {
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+        }
     }
 }
