@@ -11,6 +11,7 @@ using ModelLayer.DTOs;
 using RepositoryLayer.Context;
 using RepositoryLayer.Interface;
 using RepositoryLayer.Service;
+using StackExchange.Redis;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,6 +39,9 @@ builder.Services.AddScoped<IMapper, Mapper>();
 builder.Services.AddScoped<IValidator<AddressBookDTO>, AddressBookValidator>();
 builder.Services.AddScoped<IAddressBookService, AddressBookService>();
 builder.Services.AddScoped<IAddressBookRL, AddressBookRL>();
+
+// Register Redis ConnectionMultiplexer
+builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Redis")));
 
 // Services and Repositories
 builder.Services.AddScoped<IAuthService, AuthService>();
