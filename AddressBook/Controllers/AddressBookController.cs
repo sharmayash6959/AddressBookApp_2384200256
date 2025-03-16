@@ -13,58 +13,18 @@ using System.Threading.Tasks;
 [ApiController]
 public class AddressBookController : ControllerBase
 {
-    private readonly IAddressBookRL _addressBookService;
     private readonly IAddressBookBL _addressBookBL;
     private readonly IMapper _mapper;
     private readonly IValidator<AddressBookDTO> _validator;
 
     public AddressBookController(
-        IAddressBookRL addressBookService,
         IAddressBookBL addressBookBL,
         IMapper mapper,
         IValidator<AddressBookDTO> validator)
     {
-        _addressBookService = addressBookService ?? throw new ArgumentNullException(nameof(addressBookService));
         _addressBookBL = addressBookBL ?? throw new ArgumentNullException(nameof(addressBookBL));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> AddContact([FromBody] AddressBookDTO addressBookDto)
-    {
-        try
-        {
-            var validationResult = await _validator.ValidateAsync(addressBookDto);
-            if (!validationResult.IsValid)
-                return BadRequest(validationResult.Errors);
-
-            var addressBookEntry = _mapper.Map<AddressBookEntry>(addressBookDto);
-            var result = await _addressBookService.AddContactAsync(addressBookEntry);
-            return CreatedAtAction(nameof(GetContactByIdFromRepository), new { id = result.Id }, result);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
-    }
-
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetContactByIdFromRepository(int id)
-    {
-        try
-        {
-            var contact = await _addressBookService.GetContactByIdAsync(id);
-            if (contact == null)
-                return NotFound();
-
-            var contactDto = _mapper.Map<AddressBookDTO>(contact);
-            return Ok(contactDto);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
     }
 
     /// <summary>
@@ -87,22 +47,16 @@ public class AddressBookController : ControllerBase
     /// <summary>
     /// Get contact by id
     /// </summary>
-    [HttpGet("business/{id}")]
-    public async Task<ActionResult<ResponseModel>> GetContactByIdFromBusinessLayer(int id)
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetContactById(int id)
     {
         try
         {
             var contact = await _addressBookBL.GetContactById(id);
             if (contact == null) return NotFound();
 
-            return new ResponseModel
-            {
-                Id = contact.Id,
-                Name = contact.Name,
-                Email = contact.Email,
-                Phone = contact.Phone,
-                Address = contact.Address
-            };
+            var contactDto = _mapper.Map<AddressBookDTO>(contact);
+            return Ok(contactDto);
         }
         catch (Exception ex)
         {
@@ -114,12 +68,17 @@ public class AddressBookController : ControllerBase
     /// Adds a new contact
     /// </summary>
     [HttpPost("add")]
-    public async Task<ActionResult<ResponseModel>> AddContactBusinessLayer(RequestModel request)
+    public async Task<ActionResult<ResponseModel>> AddContact([FromBody] AddressBookDTO addressBookDto)
     {
         try
         {
-            var createdContact = await _addressBookBL.AddContact(request);
-            return CreatedAtAction(nameof(GetContactByIdFromBusinessLayer), new { id = createdContact.Id }, createdContact);
+            var validationResult = await _validator.ValidateAsync(addressBookDto);
+            if (!validationResult.IsValid)
+                return BadRequest(validationResult.Errors);
+
+            var addressBookEntry = _mapper.Map<AddressBookEntry>(addressBookDto);
+            var createdContact = await _addressBookBL.AddContact(addressBookEntry);
+            return CreatedAtAction(nameof(GetContactById), new { id = createdContact.Id }, createdContact);
         }
         catch (Exception ex)
         {
@@ -128,10 +87,10 @@ public class AddressBookController : ControllerBase
     }
 
     /// <summary>
-    /// Update contact
+    /// Updates an existing contact
     /// </summary>
     [HttpPut("update/{id}")]
-    public async Task<IActionResult> UpdateContact(int id, RequestModel request)
+    public async Task<IActionResult> UpdateContact(int id, [FromBody] RequestModel request)
     {
         try
         {
@@ -148,7 +107,7 @@ public class AddressBookController : ControllerBase
     }
 
     /// <summary>
-    /// Delete contact
+    /// Deletes a contact
     /// </summary>
     [HttpDelete("delete/{id}")]
     public async Task<IActionResult> DeleteContact(int id)

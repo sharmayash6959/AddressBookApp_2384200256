@@ -34,6 +34,9 @@ builder.Services.AddScoped<IAddressBookBL, AddressBookBL>();
 builder.Services.AddScoped<IAddressBookRL, AddressBookRL>();
 builder.Services.AddScoped<IMapper, Mapper>();
 builder.Services.AddScoped<IValidator<AddressBookDTO>, AddressBookValidator>();
+builder.Services.AddScoped<IAddressBookService, AddressBookService>();
+builder.Services.AddScoped<IAddressBookRL, AddressBookRL>();
+
 
 // Build and run the app
 var app = builder.Build();
